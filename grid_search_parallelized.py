@@ -10,33 +10,41 @@ from keras.layers import Dense, BatchNormalization
 from keras.optimizers import Adam
 from utils import *
 
-
-
-
-def seed_everything(seed: int = 42):
-    keras.utils.set_random_seed(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-
-seed_everything(42)
-
-
 class Params:
+
+    """
+    Class for the simulation paramters
+    """
     def __init__(self):
-        self.n_epochs = 5
-        self.batch_size = 64
-        self.shape_data = 4
+
+        """
+        initialization of parameters with default value
+        """
+        self.n_epochs = 50
+        self.batch_size = 32
+        self.shape_data = 4 ## as 4 assets
         self.lr = 0.005
         self.b1 = 0.5
         self.b2 = 0.999
-        self.latent_dim = 100#
+        self.latent_dim = 100
         self.sample_interval = 10
 
 
 
 
 class Generator:
+    """
+    Class to define the Generator
+
+    Main arguments are :
+
+    - latent dimension : latent dimension of the raw noise, multiplied by 3 as we add cube and square of noise
+    - number of layers (int)
+    - number of neurons per layer (int)
+    - hidden_activation between layers (string) exemple "leaky_relu"
+    - activation function (string) ex "sigmoid"
+    
+    """
     def __init__(self, latent_dim, output_shape, num_layers, neurons_per_layer, hidden_activation, output_activation):
         self.latent_dim = latent_dim *3
         self.output_shape = output_shape
@@ -47,6 +55,13 @@ class Generator:
         self.model = self.build_model()
 
     def build_model(self):
+
+        """
+        Build the generator according to the parameters
+
+        A batch normalization layer is added between each hidden layer
+
+        """
         model = Sequential()
         model.add(Dense(self.neurons_per_layer[0], activation=self.hidden_activation[0], input_shape=(self.latent_dim,)))
         for i in range(1, self.num_layers):
@@ -57,6 +72,19 @@ class Generator:
         return model
 
 class Discriminator:
+    """
+    Class to define the Generator
+
+    Main arguments are :
+
+    - input_shape : 4 as the Generator output 4 x1 arrays
+    - number of layers (int)
+    - number of neurons per layer (int)
+    - hidden_activation between layers (string) exemple "leaky_relu"
+    - activation function (string) ex "sigmoid"
+    
+    """
+        
     def __init__(self, input_shape, num_layers, neurons_per_layer, hidden_activation, output_activation):
         self.output_shape = 1
         self.input_shape = input_shape
@@ -67,6 +95,12 @@ class Discriminator:
         self.model = self.build_model()
 
     def build_model(self):
+        """
+        Build the discriminator according to the parameters
+
+        A batch normalization layer is added between each hidden layer
+
+        """
         model = Sequential()
         model.add(Dense(self.neurons_per_layer[0], activation=self.hidden_activation[0], input_shape=(self.input_shape,)))
         for i in range(1, self.num_layers):
@@ -81,35 +115,56 @@ class Discriminator:
 
     
 class GAN:
+    """
+    class to aggregate the generator and the discriminator to build the gan
+
+    Arguments are 
+
+    - generator : an instance of the Generator class
+    - discriminator : an instance of the Discriminator class
+    - params : parameters for the GAN, an instance of the Params class
+
+    """
     def __init__(self, generator, discriminator, opt):
         self.generator = generator
         self.discriminator = discriminator
         self.opt = opt
         self.adversarial_loss = 'binary_crossentropy'
         self.model = self.compile_models()
-    def compile_models(self):
 
+    def compile_models(self):
+        """
+        Stacking the generator and the discriminator together to build the GAN
+
+        setting the optimizer, according to Params class instance
+        """
         model = Sequential()
         model.add(self.generator.model)
         model.add(self.discriminator.model)
+
         optimizer = Adam(lr=self.opt.lr, beta_1=self.opt.b1, beta_2=self.opt.b2)
         model.compile(loss='binary_crossentropy', optimizer=optimizer)
         return model
-    def generate_latent_points(self,n_samples):
-
-        x_input = np.random.randn(self.opt.latent_dim * n_samples)
-
-        x_input = x_input.reshape(n_samples, self.opt.latent_dim)
-        return x_input
-    
-    def generate_fake_samples_training(self,n_samples):
-        x_input = self.generate_latent_points( n_samples)
-        X = self.generator.model.predict(x_input)
-        y = np.zeros((n_samples, 1))
-        return X, y
 
 
     def generate_noise(self,n_samples):
+
+        """
+        function to generate noise
+        
+        Argument :
+
+        - n samples (int) number of samples to generate
+
+        output 
+
+        - n_samples * (latent_dim) array of noise
+
+        Note that we augment the noise, i.e if the latent_dim in the Params
+        class is 100, we augment the latent dim to 300, as we add square of noise and cube of noise
+
+        The raw noise is drawn from a multivariate gaussian matrix with a Toeplitz correlation matrix (see report)
+        """
 
         covariance_matrix= 0.75 ** np.abs(np.subtract.outer ( np.arange(self.opt.latent_dim),np.arange (self.opt.latent_dim)))
        
@@ -122,7 +177,20 @@ class GAN:
         return noise
 
     def generate_fake_normal(self,n_samples):
-        
+        """
+        Function to create synthetic data
+
+        Args:
+
+        - n_samples : the number of samples of synthetic data to generate
+
+        Output :
+        - n_samples * 4 array
+
+        The function generate noise according to generate_noise method aqnd use the generator of the GAN to convert this noise into synthetic data
+
+
+        """
         noise = self.generate_noise(n_samples)
         X = self.generator.model.predict(noise)
         y = np.zeros((n_samples, 1))
@@ -130,6 +198,10 @@ class GAN:
     
 
     def train_gan(self,df_train):
+
+        """
+        function to train GAN
+        """
 
         bat_per_epo = int(df_train.shape[0] / self.opt.batch_size)
         for epoch in range(self.opt.n_epochs):
@@ -152,12 +224,20 @@ class GAN:
 
 
     def generate_syntethic_data(self,df_train):
+
+        """ 
+        redundance
+        """
         synthetic_data,_ = self.generate_fake_normal(df_train.shape[0])
         synthetic_data = pd.DataFrame(synthetic_data,columns = df_train.columns)
         return synthetic_data
 
 
     def anderling_distance(self,data,predictions):
+
+        """
+        function to compute anderling distance between true distribution and predictions (synthetic data)
+        """
 
         if isinstance(data,pd.DataFrame):
             data = data.values 
@@ -179,7 +259,33 @@ class GAN:
     
 
 def generate_combination_name(g_config, d_config, latent_dim):
-    # Function to create a detailed string for each layer
+    """
+     This function  will take an argument a generator config, a discriminator config, a param class config 
+
+     and will come up with a name for the simulation
+
+    example :
+
+
+    Generator_8_leaky_relu_8_leaky_relu_softplus_Discriminator_8_leaky_relu_8_leaky_relu_sigmoid_LatentDim_100
+
+
+    For a generator with 
+     - 2 layers
+     - 8 neurons per layer
+     - leaky relu hidden activation
+     - softplus activation function
+
+    A discriminator :
+    - 2 layers
+    - 8 neurons per layer
+    - leaky relu hidden activation
+    - softplus activation function
+
+    A latent dim of 100 (300 in total with square noise and cube noise)
+
+    
+    """
     def create_layer_description(num_layers, neurons_per_layer, hidden_activations, output_activation):
         layer_desc = []
         for i in range(num_layers):
@@ -194,8 +300,23 @@ def generate_combination_name(g_config, d_config, latent_dim):
     d_desc = create_layer_description(d_config['num_layers'], d_config['neurons_per_layer'], d_config['hidden_activation'], d_config['output_activation'])
     return f"Generator_{g_desc}_Discriminator_{d_desc}_LatentDim_{latent_dim}"
 
-# New evaluate_model function for parallel execution
+
 def evaluate_model(g_config, d_config, latent_dim, df_train, results_dir):
+
+    """
+    Function that will test a model with a generator config, discriminator config and given latent dim
+
+    The function
+
+    - create generator and discriminator classes instance with given configurations
+    - create a combinaison name (combi_name)
+    - stack the generator and the discriminator into a GAN class instance
+    - train the GAN
+    - test the fitted GAN on 50 iterations
+    - compute the mean AD distance and Kendall distance
+    - save results into the folder results/combi_name, the configuration, the results and model weights
+    - 
+    """
 
     results_dir = 'results'
     opt = Params()
@@ -244,6 +365,13 @@ def evaluate_model(g_config, d_config, latent_dim, df_train, results_dir):
         json.dump(model_params, f)
 
 def grid_search(grid_params, df_train, results_dir='results'):
+
+
+    """
+    testing all combinaison of generator, discriminator and latent dim
+    Using Parallel from Joblib to speed up the process
+    
+    """
     # Ensure the results directory exists
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)

@@ -6,32 +6,25 @@ This repository contains the code and documentation for the MCMC project, which 
 
 - `submission/`: This folder contains the submission materials, including generated synthetic data and possibly pre-trained models.
 - `.gitignore`: Git ignore file to prevent unnecessary files from being tracked.
-- `MCMC_project.ipynb`: Jupyter notebook with the main implementation of the GAN, including training procedures and result analysis.
-- `grid_search_parallelized.py`: Script for performing grid search for hyperparameter tuning in parallelized form.
-- `reproducing_results.ipynb`: Notebook containing the steps to reproduce the results of the project.
+- `MCMC_project.ipynb`: Jupyter notebook with the main implementation of the cholesky decomposition (analytical solution), the Gaussian Mixture Model and the GAN, including training procedures and result analysis.
+- `grid_search_parallelized.py`: Script for performing GAN architecture grid search for hyperparameter tuning in parallelized form.
+- `reproducing_results.ipynb`: Notebook containing the steps to reproduce the results of the best GAN model
 - `utils.py`: Utility functions used across the project.
 
 ## Getting Started
 
 To get started with this project, clone the repository to your local machine using:
 
-
-### Reproducing Results
-
-To reproduce the results of the project, navigate to the project directory and run the `reproducing_results.ipynb` Jupyter notebook:
-
-
-
-Follow the instructions within the notebook to execute the code cells.
-
 ### Testing the GAN
 
 To test the GAN model and other models such as Cholesky decomposition and GMM, as well as to view the generated plots, run the `MCMC_project.ipynb` notebook:
 
-
-
-
 This notebook will guide you through the process of setting up the models, training the GAN, and visualizing the results.
+
+## Reproducing GAN results
+
+several GAN architecture (size of layer, number of layers, activation function) have been tested and the best model in term of Anderson Darling Distance have been kept, in the submission folder
+To reproduce result with the best GAN? run the reproducing_result notebook
 
 ## Submission Folder
 
@@ -39,6 +32,5 @@ The `submission/` folder contains the outputs from the GAN, including synthetic 
 
 
 ## Contact
-
 
  Nasr El Hamzaoui  & Martin Boutier 
