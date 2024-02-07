@@ -30,7 +30,3 @@ To reproduce result with the best GAN? run the reproducing_result notebook
 
 The `submission/` folder contains the outputs from the GAN, including synthetic data files that closely match the statistical properties of real financial market data. These files are the end product of the project and serve as a reference for the quality of the generated synthetic data.
 
-
-## Contact
-
- Nasr El Hamzaoui  & Martin Boutier 
